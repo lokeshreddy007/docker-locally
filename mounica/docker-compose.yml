@@ -1,0 +1,57 @@
+version: "3"
+
+services:
+  db:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: monica
+      MYSQL_DATABASE: monica
+      MYSQL_USER: homestead
+      MYSQL_PASSWORD: secret
+    volumes:
+      - mysql:/var/lib/mysql
+    restart: always
+    ports:
+      - 3306:3306
+
+
+  phpmyadmin:
+    image: phpmyadmin
+    restart: always
+    ports:
+      - 8081:80
+    environment:
+      PMA_ARBITRARY: 1
+      PMA_HOST: db
+    depends_on:
+      - db
+
+  monica:
+    image: monica:latest
+    restart: always
+    environment:
+      DB_HOST: db
+      APP_TRUSTED_PROXIES: "*"
+    ports:
+      - 8080:80
+    volumes:
+      - data:/var/www/html/storage
+      - /etc/timezone:/etc/timezone:ro
+    depends_on:
+      - db
+
+  cron:
+    image: monica
+    environment:
+      DB_HOST: db
+      APP_TRUSTED_PROXIES: "*"
+    restart: always
+    volumes:
+      - data:/var/www/html/storage
+    command: cron.sh
+    depends_on:
+      - db
+
+volumes:
+  mysql:
+  data:
